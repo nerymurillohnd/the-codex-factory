@@ -1,0 +1,8 @@
+{
+  "name": "the-codex-factory-native-ci",
+  "private": true,
+  "version": "0.0.0",
+  "devDependencies": {
+    "@openai/codex": "0.162.1"
+  }
+}

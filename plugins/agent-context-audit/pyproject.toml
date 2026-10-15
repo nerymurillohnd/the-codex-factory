@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling==1.32.4", "packaging==26.3", "pathspec==1.1.1", "pluggy==1.6.0", "tomlkit==0.15.1", "trove-classifiers==2026.9.21.13"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agent-context-audit"
+version = "0.1.0"
+description = "Parallel evidence-based audits of coding-agent operating context"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = ["PyYAML==6.0.3", "jsonschema==4.26.0", "tomlkit==0.15.1"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agent_context_audit"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"schemas" = "agent_context_audit/data/schemas"
+"references" = "agent_context_audit/data/references"

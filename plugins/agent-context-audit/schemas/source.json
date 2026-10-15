@@ -1,0 +1,117 @@
+{
+  "type": "object",
+  "properties": {
+    "source_id": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "canonical_path": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "load_mode": {
+      "type": "string"
+    },
+    "provenance": {
+      "type": "string"
+    },
+    "sha256": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "hosts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "line_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "byte_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "kind": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "resolved": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "target",
+          "line",
+          "kind",
+          "state",
+          "resolved"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "redacted_lines": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "contexts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "source_id",
+    "path",
+    "canonical_path",
+    "scope",
+    "domain",
+    "load_mode",
+    "provenance",
+    "sha256",
+    "status",
+    "reason",
+    "hosts",
+    "line_count",
+    "byte_count",
+    "references",
+    "redacted_lines",
+    "contexts"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

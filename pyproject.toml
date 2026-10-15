@@ -1,0 +1,42 @@
+[project]
+name = "the-codex-factory-dev"
+version = "0.0.0"
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "pytest==9.1.1",
+  "ruff==0.17.0",
+  "basedpyright==1.40.2",
+  "PyYAML==6.0.3",
+  "jsonschema==4.26.0",
+  "types-PyYAML==6.0.12.20260906",
+  "tomlkit==0.15.1",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["plugins/agent-context-audit/src", "."]
+addopts = "-ra"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "S", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+
+[tool.basedpyright]
+include = ["plugins/agent-context-audit/src", "plugins/agent-context-audit/scripts", "tools"]
+extraPaths = ["plugins/agent-context-audit/src"]
+typeCheckingMode = "standard"
+pythonVersion = "3.11"
+venvPath = "."
+venv = ".venv"

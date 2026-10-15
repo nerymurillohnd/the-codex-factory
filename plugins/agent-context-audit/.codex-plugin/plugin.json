@@ -1,0 +1,28 @@
+{
+  "name": "agent-context-audit",
+  "version": "0.1.0",
+  "description": "Parallel, cross-domain audits of the operating context that governs coding agents.",
+  "author": {
+    "name": "Nery Samuel Murillo",
+    "url": "https://github.com/nerymurillohnd"
+  },
+  "homepage": "https://github.com/nerymurillohnd/the-codex-factory",
+  "repository": "https://github.com/nerymurillohnd/the-codex-factory",
+  "license": "MIT",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Agent Context Audit",
+    "shortDescription": "Audit the context governing your coding agents",
+    "longDescription": "Read-only audits of user-owned instructions, memory, rules, agents, workflows, and configuration, with complete coverage accounting and cross-domain reconciliation.",
+    "developerName": "Nery Samuel Murillo",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/nerymurillohnd/the-codex-factory",
+    "defaultPrompt": [
+      "Audit this repository's agent operating context and show the reconciled report."
+    ]
+  }
+}

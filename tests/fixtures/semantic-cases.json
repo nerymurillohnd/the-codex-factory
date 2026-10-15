@@ -1,0 +1,145 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Known-answer semantic benchmark. Expectations are hypotheses to check against real model reports; fixture creation and controller doubles are not detection evidence.",
+  "repositories": {
+    "cross-host": {
+      "repo/AGENTS.md": "# Repository policy\nThis repository contains no automated tests.\nRun npm run check before submitting changes.\nContinue using scripts/legacy-check.js; it remains the current verification entrypoint.\nImprove coverage enough before delivery.\nUse npm run verify as the standard complete verification.\nAfter npm run verify succeeds, manually repeat npm run lint, npm run typecheck and npm test against the same unchanged tree.\nBefore doing any work, read AGENTS.md.\nNever edit src/generated files directly.\nKeep all commits signed.\nNever disclose customer data in logs.\n",
+      "repo/CLAUDE.md": "# Claude repository policy\nRun the complete verification using npm run verify before submitting changes.\nAlways edit src/generated files directly; do not regenerate them.\n@docs/missing-policy.md\n",
+      "repo/.claude/rules/verification.md": "---\npaths: [\"src/**\"]\n---\nFor source changes, run the type checker and test suite.\n",
+      "codex/AGENTS.md": "For every repository, execute /opt/retired-project/scripts/deploy.sh before finishing.\n",
+      "codex/config.toml": "approval_policy = \"always-allow\"\n",
+      "repo/package.json": "{\n  \"name\": \"synthetic-audit-target\",\n  \"private\": true,\n  \"scripts\": {\n    \"verify\": \"node scripts/verify.mjs\",\n    \"lint\": \"eslint src\",\n    \"typecheck\": \"tsc --noEmit\",\n    \"test\": \"node --test\"\n  },\n  \"engines\": {\n    \"node\": \">=26\"\n  }\n}\n",
+      "repo/scripts/verify.mjs": "import { execFileSync } from \"node:child_process\";\nfor (const task of [\"lint\", \"typecheck\", \"test\"]) {\n  execFileSync(\"npm\", [\"run\", task], { stdio: \"inherit\" });\n}\n",
+      "repo/tests/example.test.js": "import test from \"node:test\";\nimport assert from \"node:assert/strict\";\ntest(\"example\", () => assert.equal(2 + 2, 4));\n",
+      "repo/docs/MIGRATION.md": "# Verification migration\nThe scripts/legacy-check.js entrypoint was retired and removed. The replacement is npm run verify, which executes lint, typecheck and test.\n"
+    },
+    "codex-only": {
+      "repo/AGENTS.md": "Use the project test command after behavioral changes.\nKeep commits signed.\nNever disclose customer data in logs.\n",
+      "repo/package.json": "{\n  \"name\": \"synthetic-clean-target\",\n  \"private\": true,\n  \"scripts\": {\n    \"test\": \"node --test\"\n  }\n}\n",
+      "codex/AGENTS.md": "Explain remaining uncertainty honestly.\n"
+    }
+  },
+  "expected_topics": [
+    {
+      "category": "false",
+      "subject": "automated-tests-exist"
+    },
+    {
+      "category": "wrong",
+      "subject": "missing-check-script"
+    },
+    {
+      "category": "obsolete",
+      "subject": "retired-verification-entrypoint"
+    },
+    {
+      "category": "dead",
+      "subject": "missing-claude-import"
+    },
+    {
+      "category": "ambiguous",
+      "subject": "undefined-coverage-threshold"
+    },
+    {
+      "category": "duplicated",
+      "subject": "cross-host-verification-guidance"
+    },
+    {
+      "category": "overlapping",
+      "subject": "verification-rule-overlap"
+    },
+    {
+      "category": "misplaced",
+      "subject": "project-deploy-rule-in-global-guidance"
+    },
+    {
+      "category": "contradictory",
+      "subject": "generated-files-editing-policy"
+    },
+    {
+      "category": "redundant-with-defaults",
+      "subject": "repository-verify-script-repeated-checks"
+    },
+    {
+      "category": "non-conformant",
+      "subject": "invalid-approval-policy-enum"
+    }
+  ],
+  "negative_expectations": [
+    "Do not recommend deleting the signed-commit policy solely because it is familiar.",
+    "Do not recommend deleting customer-data privacy policy as an obvious default.",
+    "Do not claim a cross-host maintenance duplicate is necessarily loaded twice in one host.",
+    "Do not execute any repository scripts."
+  ],
+  "assessment": "Record matched evidence and differing classifications explicitly. No model run has been evaluated merely because these files exist.",
+  "hybrid_repositories": {
+    "case-01": {
+      "repo/AGENTS.md": "Use the package-specific rules for source changes.\n",
+      "repo/.claude/rules/client.md": "---\npaths: [\"client/**\"]\n---\nRun the package test command after behavioral changes.\n",
+      "repo/.claude/rules/server.md": "---\npaths: [\"server/**\"]\n---\nRun the package test command after behavioral changes.\n",
+      "repo/client/app.js": "export const side = \"client\";\n",
+      "repo/server/app.js": "export const side = \"server\";\n",
+      "repo/client/package.json": "{\"name\":\"client\",\"scripts\":{\"test\":\"node --test\"}}\n",
+      "repo/server/package.json": "{\"name\":\"server\",\"scripts\":{\"test\":\"node --test\"}}\n"
+    },
+    "case-02": {
+      "repo/AGENTS.md": "This repository contains no automated tests.\n",
+      "repo/package.json": "{\"name\":\"example\",\"scripts\":{\"test\":\"node --test\"}}\n",
+      "repo/tests/example.test.js": "import test from \"node:test\";\ntest(\"addition\", () => { if (1 + 1 !== 2) throw new Error(\"wrong\"); });\n"
+    },
+    "case-03": {
+      "repo/AGENTS.md": "Never write customer identifiers into application logs. This is an intentional security policy even if existing code violates it.\n",
+      "repo/app.js": "export function processCustomer(customer) { console.log(customer.id); }\n"
+    },
+    "case-04": {
+      "repo/CLAUDE.md": "@docs/deployment.md\nFor this repository, every successful build must immediately publish its output to the production server without human intervention.\n",
+      "repo/docs/deployment.md": "For this repository, a human must explicitly approve each production deployment before it begins. No standing approval or automated-build exception applies.\n"
+    },
+    "case-05": {
+      "repo/AGENTS.md": "Use scripts/quality-runner.mjs as the complete validation before delivery. It performs linting, type checks and tests.\n",
+      "repo/package.json": "{\"name\":\"quality-example\",\"scripts\":{\"verify\":\"node scripts/quality-runner.mjs\",\"lint\":\"eslint src\",\"typecheck\":\"tsc --noEmit\",\"test\":\"node --test\"}}\n",
+      "repo/scripts/quality-runner.mjs": "import { execFileSync } from \"node:child_process\";\nfor (const task of [\"lint\", \"typecheck\", \"test\"]) { execFileSync(\"npm\", [\"run\", task], {stdio:\"inherit\"}); }\n"
+    }
+  },
+  "hybrid_expectations": {
+    "case-01": {
+      "purpose": "Dismiss an identical-text candidate justified by disjoint activation; retain both testing obligations.",
+      "expected_categories": [],
+      "protected_paths": [
+        "repo/.claude/rules/client.md",
+        "repo/.claude/rules/server.md"
+      ],
+      "require_dismissal": true
+    },
+    "case-02": {
+      "purpose": "Discover a false statement in a source with no mechanical observations.",
+      "expected_categories": [
+        "false"
+      ],
+      "protected_paths": [],
+      "require_no_observations": true
+    },
+    "case-03": {
+      "purpose": "Preserve intentional privacy policy despite violating implementation; do not label the policy false.",
+      "expected_categories": [],
+      "protected_paths": [
+        "repo/AGENTS.md"
+      ]
+    },
+    "case-04": {
+      "purpose": "Find an incompatibility across imported sources without treating a required owner decision as absent evidence.",
+      "expected_categories": [
+        "contradictory"
+      ],
+      "protected_paths": []
+    },
+    "case-05": {
+      "purpose": "Request the supporting runner content before deciding whether its claimed coverage is true; retain the before-delivery obligation.",
+      "expected_categories": [],
+      "protected_paths": [
+        "repo/AGENTS.md"
+      ],
+      "required_evidence_path": "scripts/quality-runner.mjs"
+    }
+  }
+}

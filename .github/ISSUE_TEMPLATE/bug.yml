@@ -1,0 +1,28 @@
+name: Bug report
+description: Report a reproducible plugin defect using synthetic data
+labels: [bug, "plugin:agent-context-audit"]
+body:
+  - type: input
+    id: versions
+    attributes:
+      label: Plugin, Codex, uv and operating-system versions
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Entry mode
+      options: [Headless, Interactive, Scheduled, Installation]
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal synthetic reproduction
+      description: Include expected and actual behavior. Never include credentials, auth stores or private context.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitized evidence and exit status

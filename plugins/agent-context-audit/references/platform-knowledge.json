@@ -1,0 +1,145 @@
+{
+  "schema_version": "1.0",
+  "checked_at": "2026-10-14",
+  "versions": {
+    "codex": "0.162.1",
+    "claude": "2.1.300"
+  },
+  "sources": [
+    {
+      "id": "codex-instructions",
+      "host": "codex",
+      "url": "https://learn.chatgpt.com/docs/agent-configuration/agents-md",
+      "text_sha256": "3bad2962b3678d0607ba747918018c8905c4dc73441f0804988968003449c8e2"
+    },
+    {
+      "id": "codex-config",
+      "host": "codex",
+      "url": "https://learn.chatgpt.com/docs/config-file/config-reference",
+      "text_sha256": "17b49a4901dc52512dc40c567035eacbcc2ae715ceeff195bde6778d7049741d"
+    },
+    {
+      "id": "codex-hooks",
+      "host": "codex",
+      "url": "https://learn.chatgpt.com/docs/hooks",
+      "text_sha256": "06bee00c3a7142137eea64ca0ad4fe05b63a65911b54db3c3772897214c78dfd"
+    },
+    {
+      "id": "codex-agents",
+      "host": "codex",
+      "url": "https://learn.chatgpt.com/docs/agent-configuration/subagents",
+      "text_sha256": "59fce7d69ab69b9c0523f6f930f828e3e0a438861aca7c395e87f5810eb00f61"
+    },
+    {
+      "id": "codex-skills",
+      "host": "codex",
+      "url": "https://learn.chatgpt.com/docs/build-skills",
+      "text_sha256": "1cca9bec87ec495a2cc45406ee8ed9ac4796dfabfa3cc160c9ad32aaae3ce474"
+    },
+    {
+      "id": "codex-permissions",
+      "host": "codex",
+      "url": "https://learn.chatgpt.com/docs/permissions",
+      "text_sha256": "e90be264a8e5c905d1703a22a60daf9e916adf96df0c1f73a305eaf34ade8282"
+    },
+    {
+      "id": "claude-memory",
+      "host": "claude",
+      "url": "https://code.claude.com/docs/en/memory",
+      "text_sha256": "b7dfb612a2aaa5364aa1bc2de555d5842f4ef8659f43d8cb3b84f16d9d0027ab"
+    },
+    {
+      "id": "claude-directory",
+      "host": "claude",
+      "url": "https://code.claude.com/docs/en/claude-directory",
+      "text_sha256": "04004b739e1506362bb5fd3ae5a435f5e80362f01169c1092f4fdea770a0cf9d"
+    },
+    {
+      "id": "claude-agents",
+      "host": "claude",
+      "url": "https://code.claude.com/docs/en/sub-agents",
+      "text_sha256": "2e41f29fff2d361882935e4277b0f7339859e64b9c363318b843147bae32fb0b"
+    },
+    {
+      "id": "claude-workflows",
+      "host": "claude",
+      "url": "https://code.claude.com/docs/en/workflows",
+      "text_sha256": "824d269dde00c9cae106d7459952f394b556bbe12c970b1f256bfc49a1346f90"
+    },
+    {
+      "id": "claude-settings",
+      "host": "claude",
+      "url": "https://code.claude.com/docs/en/settings",
+      "text_sha256": "993bed369a3b801ab8b42457885d1759d9b28253a33151379bd8807a4aa97d74"
+    }
+  ],
+  "claims": [
+    {
+      "id": "codex-instructions",
+      "host": "codex",
+      "url": "https://learn.chatgpt.com/docs/agent-configuration/agents-md",
+      "text": "Codex selects the first nonempty AGENTS.override.md, AGENTS.md or configured fallback at each project level. Global guidance is loaded from CODEX_HOME. Project discovery follows the project-root to current-directory chain."
+    },
+    {
+      "id": "codex-config",
+      "host": "codex",
+      "url": "https://learn.chatgpt.com/docs/config-file/config-reference",
+      "text": "Codex configuration contains behavior, provider, approval, sandbox, hook and external-tool settings. These must be assessed against documented keys and applicable configuration layers; a declared command is not proof it ran."
+    },
+    {
+      "id": "codex-hooks",
+      "host": "codex",
+      "url": "https://learn.chatgpt.com/docs/hooks",
+      "text": "Codex hooks can execute commands or supported MCP handlers when matching events occur. Disabling hooks in an isolated auditor does not change the target configuration."
+    },
+    {
+      "id": "codex-agents",
+      "host": "codex",
+      "url": "https://learn.chatgpt.com/docs/agent-configuration/subagents",
+      "text": "Custom agents have their own role instructions. Their sandbox settings do not independently override the parent configuration."
+    },
+    {
+      "id": "codex-skills",
+      "host": "codex",
+      "url": "https://learn.chatgpt.com/docs/build-skills",
+      "text": "Skills supply reusable instructions and may support explicit invocation. In this product, skill packages are reference-only exclusions from audit remediation scope."
+    },
+    {
+      "id": "codex-permissions",
+      "host": "codex",
+      "url": "https://learn.chatgpt.com/docs/permissions",
+      "text": "Permission profiles are under development. Verify the effective profile and capabilities. Do not assume permission-profile behavior from a different release or mix legacy sandbox settings with profiles."
+    },
+    {
+      "id": "claude-memory",
+      "host": "claude",
+      "url": "https://code.claude.com/docs/en/memory",
+      "text": "Claude instruction discovery includes user, project, nested and local memory files. Imports are bounded to four hops. AGENTS.md support and loading details depend on the Claude version. Auto memory is distinct from explicitly authored instructions."
+    },
+    {
+      "id": "claude-directory",
+      "host": "claude",
+      "url": "https://code.claude.com/docs/en/claude-directory",
+      "text": "Claude directories contain rules, agents, legacy commands, skills, workflows and configuration. Legacy commands share a mechanism with skills, but this audit includes commands and excludes skill packages by the owner-selected boundary."
+    },
+    {
+      "id": "claude-agents",
+      "host": "claude",
+      "url": "https://code.claude.com/docs/en/sub-agents",
+      "text": "Claude custom agents can supply specialized instructions, tools and persistent agent memory. Audit their intended invocation scope before treating different role guidance as contradictory."
+    },
+    {
+      "id": "claude-workflows",
+      "host": "claude",
+      "url": "https://code.claude.com/docs/en/workflows",
+      "text": "Saved Claude workflows live in user or project workflow directories. Workflow orchestration is a Claude runtime capability and is not a Codex execution API."
+    },
+    {
+      "id": "claude-settings",
+      "host": "claude",
+      "url": "https://code.claude.com/docs/en/settings",
+      "text": "Claude settings, hooks and MCP declarations shape behavior according to source scope and precedence. Commands and helper files are audit data and must not be executed to inspect their declarations."
+    }
+  ],
+  "interpretation": "Claims are maintained paraphrases, not verbatim documentation excerpts. Live article-content hash changes require review; offline and unavailable documents make the audit partial."
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Context Audit"
+  short_description: "Audit the context governing coding agents"
+  default_prompt: "Use $audit-agent-context to audit this repository's agent operating context and show the reconciled report."

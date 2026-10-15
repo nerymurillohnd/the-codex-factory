@@ -1,0 +1,60 @@
+name: Validate marketplace and plugins
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality and packaging (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: 0.13.0
+          enable-cache: true
+      - name: Prepare pinned Python environment
+        run: uv sync --locked --python 3.14.8
+      - name: Python lint and formatter-owned source
+        run: |
+          uv run --locked --no-env-file ruff check .
+          uv run --locked --no-env-file ruff format --check plugins/agent-context-audit/src plugins/agent-context-audit/scripts tools tests
+      - name: Type diagnostics using nvm Node
+        shell: bash
+        run: |
+          export NVM_DIR="$RUNNER_TEMP/aca-nvm"
+          git init "$NVM_DIR"
+          git -C "$NVM_DIR" fetch --depth 1 https://github.com/nvm-sh/nvm.git a885b885fef16fac4bc544188fb25e9e37ae83e8
+          git -C "$NVM_DIR" checkout --detach FETCH_HEAD
+          source "$NVM_DIR/nvm.sh"
+          nvm install 26.11.1
+          nvm use 26.11.1
+          node .venv/lib/python3.14/site-packages/basedpyright/index.js
+          npm ci --prefix tools/ci --ignore-scripts
+          echo "$(dirname "$(command -v node)")" >> "$GITHUB_PATH"
+          echo "$GITHUB_WORKSPACE/tools/ci/node_modules/.bin" >> "$GITHUB_PATH"
+      - name: Behavioral fixtures and marketplace
+        run: |
+          uv run --locked --no-env-file pytest tests --native-codex "$(command -v codex)"
+          uv run --locked --no-env-file python -m tools.validate_marketplace
+      - name: Deterministic installable package
+        run: |
+          uv run --locked --no-env-file python -m tools.package_plugin --output-dir dist/first
+          uv run --locked --no-env-file python -m tools.package_plugin --output-dir dist/second
+          cmp dist/first/agent-context-audit-0.1.0.zip dist/second/agent-context-audit-0.1.0.zip
