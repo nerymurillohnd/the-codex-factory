@@ -39,6 +39,29 @@ def test_package_refuses_source_symlinks(tmp_path):
         package_plugin(root, tmp_path / "out")
 
 
+def test_session_handoff_package_is_reproducible_and_independent(tmp_path):
+    root = Path(__file__).resolve().parents[1]
+    first = package_plugin(root, tmp_path / "first", plugin_name="session-handoff")
+    second = package_plugin(root, tmp_path / "second", plugin_name="session-handoff")
+    assert first.read_bytes() == second.read_bytes()
+    with zipfile.ZipFile(first) as archive:
+        names = archive.namelist()
+        assert "session-handoff/hooks/session-bootstrap.sh" in names
+        assert "session-handoff/skills/write-handoff/SKILL.md" in names
+        assert "session-handoff/plugin.json" not in names
+        assert "session-handoff/metadata/plugin.json" in names
+        assert not any(name.endswith(".py") for name in names)
+        assert all(name.startswith("session-handoff/") for name in names)
+    assert (first.parent / "session-handoff-SHA256SUMS").is_file()
+    assert (first.parent / "session-handoff-PACKAGE-CONTENTS.txt").is_file()
+
+
+@pytest.mark.parametrize("name", ["../outside", "missing", "agent-context-audit/../outside"])
+def test_package_rejects_unknown_or_escaping_plugin(tmp_path, name):
+    with pytest.raises(ValueError, match="plugin"):
+        package_plugin(tmp_path, tmp_path / "out", plugin_name=name)
+
+
 def test_generated_finder_metadata_is_not_a_product_input(tmp_path):
     source = Path(__file__).resolve().parents[1] / "plugins/agent-context-audit"
     root = tmp_path / "repo"

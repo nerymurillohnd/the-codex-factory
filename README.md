@@ -11,6 +11,7 @@ See [repository publication state](docs/REPOSITORY-STATE.md) for the distinction
 | Plugin | Version | Purpose |
 | --- | --- | --- |
 | [Agent Context Audit](plugins/agent-context-audit/README.md) | 0.1.0 candidate | Parallel and cross-domain audits of the instructions, memory, rules, agents, workflows and configuration governing coding agents |
+| [Session Handoff](plugins/session-handoff/README.md) | 0.1.0 candidate | Reviewed project handoffs, pending-item reconciliation and trusted session-start context recovery |
 
 ## Installation
 
@@ -35,8 +36,27 @@ node .venv/lib/python3.14/site-packages/basedpyright/index.js
 uv run --locked --no-env-file pytest tests --native-codex "$(command -v codex)"
 uv run --locked --no-env-file python -m tools.validate_marketplace
 uv run --locked --no-env-file python -m tools.package_plugin --output-dir dist
+uv run --locked --no-env-file python -m tools.package_plugin --plugin session-handoff --output-dir dist
 ```
 
 The Basedpyright JavaScript entry point deliberately uses the nvm Node executable. Do not run its Python wrapper, which selects its bundled Node dependency. Source/configuration/instruction Markdown is not formatter-owned.
 
+Session Handoff uses Bash and Codex's native tools at runtime; the Python
+environment above is maintainer tooling. See its
+[verification report](docs/SESSION-HANDOFF-VERIFICATION.md) for local installation,
+Plugin Eval, behavioral acceptance and remaining release blockers.
+
 See [maintenance](docs/MAINTAINING.md), [security](SECURITY.md), the [approved implementation plan](docs/superpowers/plans/2026-10-14-agent-context-audit.md), and the [verification matrix](docs/VERIFICATION.md). Local fixture gates, model accuracy, native isolation, clean installation, operating-system coverage and public-source installation are separate evidence layers.
+
+## Project consistency before push
+
+The project-local audit skill, native reviewer and Git pre-push guard check plugin
+metadata, documentation and package alignment against the actual outgoing commits.
+Run the deterministic check with:
+
+```sh
+uv run --locked --no-env-file python -m tools.push_audit check --root "$PWD" --deterministic
+```
+
+See [setup, native review and recovery](docs/PROJECT-CONSISTENCY.md). Installation
+is local to this repository; no global Git/Codex configuration is changed.

@@ -2,6 +2,16 @@
 
 Act as a marketplace co-maintainer. The owner approves publication. Keep plugins independently versioned and installable.
 
+## Before any Git push
+
+Use the project-local audit-project-consistency skill and
+project-consistency-auditor role. Confirm the reviewed repository-local pre-push
+guard is installed; it validates the actual outgoing objects and blocks on
+discrepancies or incomplete review. A passing working-copy check, old report or
+agent claim is not approval of a future commit. Follow docs/PROJECT-CONSISTENCY.md.
+Never bypass a failing hook or weaken a check. The audit does not authorize pushing,
+tagging, merging or publishing; those actions retain their own authorization.
+
 ## Working conventions
 
 - Follow the approved task-specific plan under `docs/superpowers/plans/` and retain implementation evidence under `.superpowers/` until review. Historical plans and verification reports do not authorize new work or establish current results.

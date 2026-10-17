@@ -1,10 +1,15 @@
 # Maintainer workflow
 
+Before a push, use the project-local consistency skill and native reviewer through
+the repository-local Git guard described in PROJECT-CONSISTENCY.md. Audit the exact
+outgoing objects, preserve discrepancies and reject incomplete review. The guard
+supplements the quality and publication gates below; it does not authorize a push.
+
 Nery Samuel Murillo owns The Codex Factory. Codex acts as co-maintainer for implementation, reviews, tests, release preparation and issue triage. It drafts replies; it posts replies only when explicitly instructed.
 
-Each plugin has an independent semantic version and tag `plugin/<name>/v<version>`. Canonical portable metadata lives in plugin.json; keep the Codex compatibility overlay synchronized. Catalog paths resolve from the marketplace root. Publish only clean, validated installable files, with LICENSE, README, CHANGELOG and SHA-256 checksums.
+Each plugin has an independent semantic version and tag `plugin/<name>/v<version>`. Canonical portable metadata lives in plugin.json; keep the Codex compatibility overlay synchronized. For the native Session Handoff hook plugin, canonical portable metadata is retained at metadata/plugin.json and the active manifest is .codex-plugin/plugin.json: a root portable manifest suppresses hooks on the tested Codex versions. Keep both synchronized; see SESSION-HANDOFF-VERIFICATION.md for the reproduced loader conflict. Catalog paths resolve from the marketplace root. Publish only clean, validated installable files, with LICENSE, README, CHANGELOG and SHA-256 checksums.
 
-Before committing, pushing or releasing: inspect the complete diff, local gates, known-answer semantic results, native isolation, clean installation and supported-platform matrix. Present the actual package and remaining limitations to the owner. Commits and tags must be signed and signatures verified. A user-approved implementation is not publication approval. Every PR requires a label; use `plugin:agent-context-audit` plus a type label (`bug`, `enhancement`, `documentation`, `maintenance`) as appropriate.
+Before committing, pushing or releasing: inspect the complete diff, local gates, known-answer semantic results, native isolation, clean installation and supported-platform matrix. Present the actual package and remaining limitations to the owner. Commits and tags must be signed and signatures verified. A user-approved implementation is not publication approval. Every PR requires a label; use the affected plugin label (for example `plugin:session-handoff` or `plugin:agent-context-audit`) plus a type label (`bug`, `enhancement`, `documentation`, `maintenance`) as appropriate.
 
 For issues, reproduce against the exact plugin/Codex version and entry mode. Classify confirmed, contradicted, unverified and out-of-scope claims separately. Never request secrets, auth files, raw private instructions or unredacted environment dumps. Ask for a minimized synthetic fixture and the sanitized status fields needed to reproduce. Preserve uncertainty; a passing schema or formal evaluation score does not establish factual correctness.
 
