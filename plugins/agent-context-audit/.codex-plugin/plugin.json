@@ -12,7 +12,7 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Agent Context Audit",
-    "shortDescription": "Audit the context governing your coding agents",
+    "shortDescription": "Audit agent operating context",
     "longDescription": "Read-only audits of user-owned instructions, memory, rules, agents, workflows, and configuration, with complete coverage accounting and cross-domain reconciliation.",
     "developerName": "Nery Samuel Murillo",
     "category": "Productivity",

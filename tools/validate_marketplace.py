@@ -7,6 +7,67 @@ from pathlib import Path
 import yaml
 
 
+def contained_resource(
+    plugin: Path, value: object, label: str, errors: list[str], *, directory: bool = False
+) -> Path | None:
+    """Resolve packaged resources without following symlinks or accepting escapes."""
+    if not isinstance(value, str) or not value.startswith("./"):
+        errors.append(f"{label}: resource must start with ./")
+        return None
+    relative = Path(value)
+    candidate = plugin / relative
+    if ".." in relative.parts or not candidate.resolve().is_relative_to(plugin.resolve()):
+        errors.append(f"{label}: resource path escape")
+        return None
+    if any(part.is_symlink() for part in [candidate, *candidate.parents] if part != plugin.parent):
+        errors.append(f"{label}: resource symlink")
+        return None
+    if not (candidate.is_dir() if directory else candidate.is_file()):
+        errors.append(f"{label}: missing resource {value}")
+        return None
+    return candidate
+
+
+def validate_hooks(plugin: Path, declaration: object, label: str, errors: list[str]) -> None:
+    """Validate hook files/inline definitions and packaged script references, never execute them."""
+    if isinstance(declaration, list):
+        for value in declaration:
+            validate_hooks(plugin, value, label, errors)
+        return
+    if isinstance(declaration, str):
+        resource = contained_resource(plugin, declaration, label, errors)
+        if resource is None:
+            return
+        try:
+            config = json.loads(resource.read_text())
+        except (OSError, ValueError) as exc:
+            errors.append(f"{label}: unreadable hooks: {exc}")
+            return
+    else:
+        config = declaration
+    if not isinstance(config, dict) or not isinstance(config.get("hooks"), dict):
+        errors.append(f"{label}: invalid hooks object")
+        return
+    for groups in config["hooks"].values():
+        if not isinstance(groups, list):
+            errors.append(f"{label}: invalid hook groups")
+            continue
+        for group in groups:
+            if not isinstance(group, dict) or not isinstance(group.get("hooks"), list):
+                errors.append(f"{label}: invalid hook group")
+                continue
+            for handler in group["hooks"]:
+                if not isinstance(handler, dict):
+                    errors.append(f"{label}: invalid hook handler")
+                    continue
+                command = handler.get("command")
+                if handler.get("type") == "command" and not isinstance(command, str):
+                    errors.append(f"{label}: missing hook command")
+                if isinstance(command, str):
+                    for match in re.finditer(r'\$\{PLUGIN_ROOT\}/([^\s"\x27]+)', command):
+                        contained_resource(plugin, "./" + match[1], label, errors)
+
+
 def validate_marketplace(root: Path) -> list[str]:
     """Return validation errors for a marketplace root."""
     errors: list[str] = []
@@ -35,8 +96,16 @@ def validate_marketplace(root: Path) -> list[str]:
                 errors.append(f"{name}: missing policy.{field}")
         if not entry.get("category"):
             errors.append(f"{name}: missing category")
+        native_metadata = path / "metadata/plugin.json"
+        root_manifest = path / "plugin.json"
+        if native_metadata.exists() and root_manifest.exists():
+            errors.append(f"{name}: native metadata layout requires absent root plugin.json")
+        canonical = "./plugin.json" if root_manifest.exists() else "./metadata/plugin.json"
+        canonical_path = contained_resource(path, canonical, f"{name}: manifest", errors)
+        if canonical_path is None:
+            continue
         try:
-            manifest = json.loads((path / "plugin.json").read_text())
+            manifest = json.loads(canonical_path.read_text())
             overlay = json.loads((path / ".codex-plugin/plugin.json").read_text())
         except (OSError, ValueError) as exc:
             errors.append(f"{name}: manifest/overlay unreadable: {exc}")
@@ -48,7 +117,19 @@ def validate_marketplace(root: Path) -> list[str]:
         for field in ("name", "version", "description", "author", "license"):
             if overlay.get(field) != manifest.get(field):
                 errors.append(f"{name}: overlay {field} differs from canonical manifest")
-        skills = list((path / "skills").glob("*/SKILL.md"))
+        extension = manifest.get("extensions", {}).get("com.openai", {})
+        for field in ("hooks", "interface"):
+            if overlay.get(field) != extension.get(field):
+                errors.append(f"{name}: overlay {field} differs from canonical manifest")
+        skills_directory = contained_resource(
+            path, overlay.get("skills", "./skills/"), f"{name}: skills", errors, directory=True
+        )
+        hook_declaration = extension.get("hooks")
+        if hook_declaration is None and (path / "hooks/hooks.json").exists():
+            hook_declaration = "./hooks/hooks.json"
+        if hook_declaration is not None:
+            validate_hooks(path, hook_declaration, f"{name}: hooks", errors)
+        skills = list(skills_directory.glob("*/SKILL.md")) if skills_directory is not None else []
         if not skills:
             errors.append(f"{name}: no skill entrypoint")
         for skill in skills:

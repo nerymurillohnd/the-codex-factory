@@ -1,0 +1,26 @@
+{
+  "name": "session-handoff",
+  "version": "0.1.0",
+  "description": "Carry project state between Codex sessions with reviewed, append-only handoffs and explicit reconciliation of pending work.",
+  "author": {
+    "name": "Nery Samuel Murillo",
+    "url": "https://github.com/nerymurillohnd"
+  },
+  "license": "MIT",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
+  "interface": {
+    "displayName": "Session Handoff",
+    "shortDescription": "Carry work between sessions",
+    "longDescription": "Write reviewed project handoffs, reconcile every unresolved item, and recover context at session startup through a trusted local hook.",
+    "developerName": "Nery Samuel Murillo",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Write a handoff for this project before I stop working."
+    ]
+  }
+}

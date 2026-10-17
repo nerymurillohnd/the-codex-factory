@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "scope_digest", "reviewed_files", "findings"],
+  "properties": {
+    "status": {"type": "string", "enum": ["PASS", "BLOCKED", "ERROR"]},
+    "scope_digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "reviewed_files": {"type": "array", "items": {"type": "string"}},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "severity", "path", "message"],
+        "properties": {
+          "code": {"type": "string", "pattern": "\\S"},
+          "severity": {"type": "string", "enum": ["error", "warning"]},
+          "path": {"type": "string"},
+          "message": {"type": "string", "pattern": "\\S"}
+        }
+      }
+    }
+  }
+}
