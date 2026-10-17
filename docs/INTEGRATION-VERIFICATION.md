@@ -52,7 +52,7 @@ The deterministic auditor built every archive twice and checked exact bytes, inv
 
 ## Publication boundaries
 
-The first remote Ubuntu 24.04 job reached the native sandbox canary but could not start it; macOS CI passed. Linux CI now installs bubblewrap and the distribution's scoped AppArmor user-namespace profile, with a real bwrap preflight before the unchanged native tests. This follows https://learn.chatgpt.com/docs/sandboxing. The global AppArmor restriction is not disabled and no sandbox assertion is skipped. Final remote outcomes remain visible in the PR checks.
+The first remote Ubuntu 24.04 job reached the native sandbox canary but could not start it; macOS CI passed. Linux CI now installs bubblewrap and the distribution's scoped AppArmor user-namespace profile, with a real bwrap preflight before the unchanged native tests. This follows https://learn.chatgpt.com/docs/sandboxing. The global AppArmor restriction is not disabled and no sandbox assertion is skipped. The preparation and its bwrap preflight passed on Ubuntu, but the native canary still could not start. The native synthetic fixture now retains bounded, redacted subprocess stderr on assertion failure to identify the remaining cause. This does not skip or relax the isolation assertions. Final remote outcomes remain visible in the PR checks.
 
 All source worktrees must be clean after the signed source commits and integration merge. Ignored build/runtime/evidence directories are retained under the project's existing policy, not forced into source control. The final remote branch/PR/CI state is verified directly on GitHub rather than inferred from local checks.
 
