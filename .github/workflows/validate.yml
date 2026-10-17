@@ -64,13 +64,20 @@ jobs:
           node_directory="$(dirname "${node_executable}")"
           printf '%s\n' "${node_directory}" >> "${GITHUB_PATH}"
           echo "${GITHUB_WORKSPACE}/tools/ci/node_modules/.bin" >> "${GITHUB_PATH}"
+      - name: Resolve pinned native Codex executable
+        shell: bash
+        run: |
+          codex_binaries=( "${GITHUB_WORKSPACE}"/tools/ci/node_modules/@openai/codex-*/vendor/*/bin/codex )
+          test "${#codex_binaries[@]}" -eq 1
+          codex_native="${codex_binaries[0]}"
+          test -x "${codex_native}"
+          "${codex_native}" --version
+          printf 'FACTORY_NATIVE_CODEX=%s\n' "${codex_native}" >> "${GITHUB_ENV}"
       - name: Permit pinned Codex native namespace setup on Linux
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          codex_binaries=( "${GITHUB_WORKSPACE}/tools/ci/node_modules/@openai/codex-linux-x64"/vendor/*/bin/codex )
-          test "${#codex_binaries[@]}" -eq 1
-          codex_native="${codex_binaries[0]}"
+          codex_native="${FACTORY_NATIVE_CODEX}"
           test -x "${codex_native}"
           "${codex_native}" --version
           restriction_before="$(sysctl -n kernel.apparmor_restrict_unprivileged_userns)"
@@ -92,7 +99,7 @@ jobs:
           codex sandbox -- /bin/true
       - name: Behavioral fixtures and marketplace
         run: |
-          codex_executable="$(command -v codex)"
+          codex_executable="${FACTORY_NATIVE_CODEX}"
           uv run --locked --no-env-file pytest tests --native-codex "${codex_executable}"
           uv run --locked --no-env-file python -m tools.validate_marketplace
           uv run --locked --no-env-file python -m tools.push_audit check --root "${GITHUB_WORKSPACE}" --deterministic

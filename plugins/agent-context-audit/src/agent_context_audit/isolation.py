@@ -187,6 +187,7 @@ async def prepare_runtime(options: RunOptions, run: RunState) -> CodexRuntime:
         raise ValueError("Codex CLI 0.162.1 or newer with the required capabilities is needed")
     name = "aca_" + run.run_id.replace("-", "")[:12]
     readable = {
+        str(options.codex_bin.resolve()),
         str(run.work_directory.resolve()),
         str(Path(sys.prefix).resolve()),
         str(Path(sys.base_prefix).resolve()),

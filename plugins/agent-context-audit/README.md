@@ -26,6 +26,8 @@ Checks cover false, wrong, obsolete, dead, ambiguous, duplicated, overlapping, m
 
 Prerequisites: uv, a trusted Python 3.14.8 installation discoverable with `uv python find --system` (prepare it with `uv python install --no-config 3.14.8` if needed), Codex CLI 0.162.1, and native Codex authentication available to the user. The maintained knowledge baseline covers Codex 0.162.1 and Claude Code 2.1.300. Other Codex versions require successful capability probes and remain outside the verified knowledge baseline. macOS arm64 is the development platform; consult the verification matrix before assuming another platform is tested.
 
+On Linux, pass the actual trusted native executable with `--codex-bin /absolute/native-codex` when your package manager exposes a JavaScript launcher. The deny-by-default sandbox grants read access to that exact executable for its internal re-exec, without exposing its parent directory. The capability canary remains mandatory.
+
 Resolve the installed plugin root from the loaded skill's location. Substitute that absolute directory for `/absolute/plugin` below. Python is managed by uv; setup creates a separate locked environment under the user's data directory. Setup is the only dependency-installing operation.
 
 ```sh

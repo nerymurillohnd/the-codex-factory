@@ -3,6 +3,7 @@
 import asyncio
 import json
 import shutil
+import tomllib
 
 import pytest
 from agent_context_audit.isolation import inspect_claude_version, prepare_runtime, probe_isolation
@@ -100,6 +101,12 @@ def test_native_sandbox_and_exact_worker_transport(
 
     async def exercise():
         runtime = await prepare_runtime(options, run)
+        policy = next(c for c in runtime.config if ".filesystem=" in c).split("=", 1)[1]
+        filesystem = tomllib.loads("filesystem=" + policy)["filesystem"]
+        assert filesystem[str(native_codex.resolve())] == "read"
+        assert filesystem[":root"] == "deny"
+        assert str(native_codex.resolve().parent) not in filesystem
+        assert str(target.root.resolve()) not in filesystem
         capability = await probe_isolation(runtime)
         assert capability.verified, (capability.limitations, diagnostics)
         server = await asyncio.start_server(handler, "127.0.0.1", 0)
