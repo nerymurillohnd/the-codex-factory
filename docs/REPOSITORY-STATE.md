@@ -2,7 +2,7 @@
 
 The owner authorized staging all pending project work, signed commits, source pushes and a pull request on 2026-10-17 UTC. The source repository is https://github.com/nerymurillohnd/the-codex-factory, public as specified by this project's public-by-design scope.
 
-The initial default-branch bootstrap retains the Agent Context Audit source and corrects its canonical/native shortDescription to the supported 30-character limit. Its candidate version remains 0.1.0. Session Handoff, Project Records and the project pre-push auditor are integrated through a separate review branch and pull request.
+The default-branch bootstrap retains the Agent Context Audit source, corrects its canonical/native shortDescription to the supported 30-character limit, and aligns the persisted run schema with hybrid observation/adjudication fields after reproducing the pre-push auditor's findings. Its candidate version remains 0.1.0. Session Handoff, Project Records and the project pre-push auditor are integrated through a separate review branch and pull request.
 
 The earlier verification documents are dated evidence snapshots. Statements in them about no commits, repository creation or pushes describe their recording stage, before the owner's publication request. They do not override the current authorization or assert present GitHub state. Their test results, package hashes, semantic examples and limitations remain scoped to the recorded source revision.
 
