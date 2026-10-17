@@ -1,0 +1,35 @@
+{
+  "name": "project-records",
+  "version": "0.1.0",
+  "description": "Project-local architecture decision records and technical debt ledgers with verified resolutions.",
+  "author": {
+    "name": "Nery Samuel Murillo",
+    "url": "https://github.com/nerymurillohnd"
+  },
+  "homepage": "https://github.com/nerymurillohnd/the-codex-factory",
+  "repository": "https://github.com/nerymurillohnd/the-codex-factory",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "adr",
+    "decisions",
+    "technical-debt"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Project Records",
+    "shortDescription": "Track decisions and debt",
+    "longDescription": "Maintain project-local architecture decisions and technical debt with evidence, deduplication and preserved history.",
+    "developerName": "Nery Samuel Murillo",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/nerymurillohnd/the-codex-factory",
+    "defaultPrompt": [
+      "Record this project's important decisions and confirmed deferred debt."
+    ]
+  },
+  "requires_local_executor": true
+}

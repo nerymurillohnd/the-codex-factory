@@ -400,6 +400,12 @@
           },
           "id": {
             "type": "string"
+          },
+          "observation_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -516,6 +522,12 @@
               "type": "string"
             },
             "uniqueItems": true
+          },
+          "adjudicated_finding_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [

@@ -24,15 +24,35 @@ SESSION_FILES = {
     "skills/write-handoff/references/save.md",
 }
 SESSION_OPTIONAL_FILES = {"skills/write-handoff/agents/openai.yaml"}
+RECORDS_FILES = {
+    "plugin.json",
+    ".codex-plugin/plugin.json",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "skills/project-records/SKILL.md",
+    "skills/project-records/references/decision-records.md",
+    "skills/project-records/references/debt-ledger-open.md",
+    "skills/project-records/references/debt-ledger-resolve.md",
+    "skills/project-records/assets/ADR_YYYY-MM-DD_decision-slug.md",
+    "skills/project-records/assets/pending-debt.md",
+    "skills/project-records/assets/resolved-debt.md",
+}
 
 
 def package_plugin(root: Path, output_dir: Path, plugin_name: str = "agent-context-audit") -> Path:
-    if plugin_name not in {"agent-context-audit", "session-handoff"}:
+    if plugin_name not in {"agent-context-audit", "session-handoff", "project-records"}:
         raise ValueError(f"Unknown plugin: {plugin_name}")
     plugin = root / "plugins" / plugin_name
-    if plugin.is_symlink() or not plugin.resolve().is_relative_to(root.resolve()):
+    if (
+        (root / "plugins").is_symlink()
+        or plugin.is_symlink()
+        or not plugin.resolve().is_relative_to(root.resolve())
+    ):
         raise ValueError(f"Package source symlink/escape: {plugin_name}")
-    required = SESSION_FILES if plugin_name == "session-handoff" else ROOT_FILES
+    required = {"session-handoff": SESSION_FILES, "project-records": RECORDS_FILES}.get(
+        plugin_name, ROOT_FILES
+    )
     files = []
     for path in sorted(plugin.rglob("*")):
         relative = path.relative_to(plugin)
@@ -46,6 +66,9 @@ def package_plugin(root: Path, output_dir: Path, plugin_name: str = "agent-conte
             continue
         if plugin_name == "session-handoff":
             if relative.as_posix() not in SESSION_FILES | SESSION_OPTIONAL_FILES:
+                raise ValueError(f"Unexpected installable file: {relative}")
+        elif plugin_name == "project-records":
+            if relative.as_posix() not in RECORDS_FILES:
                 raise ValueError(f"Unexpected installable file: {relative}")
         else:
             if relative.parts[0] not in DIRECTORIES and relative.as_posix() not in ROOT_FILES:
@@ -72,6 +95,8 @@ def package_plugin(root: Path, output_dir: Path, plugin_name: str = "agent-conte
         raise ValueError(f"Invalid plugin identity/version: {plugin_name}")
     output_dir.mkdir(parents=True, exist_ok=True)
     archive = output_dir / f"{plugin_name}-{version}.zip"
+    if any(path != archive for path in output_dir.glob("*.zip")):
+        raise ValueError("Use a distinct output directory for each plugin/version archive")
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as output:
         for path in files:
             info = zipfile.ZipInfo(
@@ -83,11 +108,12 @@ def package_plugin(root: Path, output_dir: Path, plugin_name: str = "agent-conte
             info.external_attr = (0o100755 if path.suffix == ".sh" else 0o100644) << 16
             output.writestr(info, path.read_bytes())
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
-    prefix = "" if plugin_name == "agent-context-audit" else f"{plugin_name}-"
-    (output_dir / f"{prefix}SHA256SUMS").write_text(f"{digest}  {archive.name}\n")
-    (output_dir / f"{prefix}PACKAGE-CONTENTS.txt").write_text(
-        "\n".join(str(p.relative_to(plugin)) for p in files) + "\n"
-    )
+    prefixes = {""} if plugin_name == "agent-context-audit" else {"", f"{plugin_name}-"}
+    for prefix in sorted(prefixes):
+        (output_dir / f"{prefix}SHA256SUMS").write_text(f"{digest}  {archive.name}\n")
+        (output_dir / f"{prefix}PACKAGE-CONTENTS.txt").write_text(
+            "\n".join(str(p.relative_to(plugin)) for p in files) + "\n"
+        )
     return archive
 
 
@@ -97,7 +123,7 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, default=Path("dist"))
     parser.add_argument(
         "--plugin",
-        choices=["agent-context-audit", "session-handoff"],
+        choices=["agent-context-audit", "session-handoff", "project-records"],
         default="agent-context-audit",
     )
     arguments = parser.parse_args()

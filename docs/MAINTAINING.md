@@ -1,5 +1,7 @@
 # Maintainer workflow
 
+Use a separate package output directory for each plugin/version. The packager refuses a destination containing a different ZIP, preserving earlier inventories/checksums. It emits generic sidecars and matching plugin-prefixed aliases for nondefault plugins so both existing consumers remain supported. CI builds all three registered plugins independently and compares each pair of archives.
+
 Before a push, use the project-local consistency skill and native reviewer through
 the repository-local Git guard described in PROJECT-CONSISTENCY.md. Audit the exact
 outgoing objects, preserve discrepancies and reject incomplete review. The guard

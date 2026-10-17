@@ -56,9 +56,8 @@ jobs:
           uv run --locked --no-env-file python -m tools.push_audit check --root "$GITHUB_WORKSPACE" --deterministic
       - name: Deterministic installable package
         run: |
-          uv run --locked --no-env-file python -m tools.package_plugin --output-dir dist/first
-          uv run --locked --no-env-file python -m tools.package_plugin --output-dir dist/second
-          cmp dist/first/agent-context-audit-0.1.0.zip dist/second/agent-context-audit-0.1.0.zip
-          uv run --locked --no-env-file python -m tools.package_plugin --plugin session-handoff --output-dir dist/first
-          uv run --locked --no-env-file python -m tools.package_plugin --plugin session-handoff --output-dir dist/second
-          cmp dist/first/session-handoff-0.1.0.zip dist/second/session-handoff-0.1.0.zip
+          for plugin in agent-context-audit session-handoff project-records; do
+            uv run --locked --no-env-file python -m tools.package_plugin --plugin "$plugin" --output-dir "dist/first/$plugin"
+            uv run --locked --no-env-file python -m tools.package_plugin --plugin "$plugin" --output-dir "dist/second/$plugin"
+            cmp "dist/first/$plugin/$plugin-0.1.0.zip" "dist/second/$plugin/$plugin-0.1.0.zip"
+          done

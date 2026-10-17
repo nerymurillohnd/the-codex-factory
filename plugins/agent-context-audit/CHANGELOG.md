@@ -4,6 +4,8 @@
 
 - Align the canonical/native listing summary with the 30-character field limit.
 
+- Preserve hybrid observation provenance and adjudicated finding IDs in the strict persisted run contract, with malformed-field and legacy-readability regressions.
+
 - Hybrid review: automatic observations, coherent file assignments, independent discovery, semantic verification and accountable final adjudication.
 - Run schema 1.1 with observation/assessment ledgers, legacy report reading and scope-aware baseline comparisons.
 - Broader embedded-credential redaction and line-preserving Claude MCP views that exclude unrelated application state.
