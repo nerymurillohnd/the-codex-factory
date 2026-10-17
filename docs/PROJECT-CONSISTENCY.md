@@ -54,7 +54,10 @@ content tree exists. Publication/deletion authorization remains separate.
 
 Large scopes are reviewed in bounded whole-file batches. Each batch stays below
 512 KiB and repeats shared identity, README, license, changelog, skill and schema
-anchors. A current source and its previous version remain together. Every packet
+anchors. Changed files and their previous versions are shared across all batches
+when the complete change plus contract anchors fits the same limit. Otherwise,
+contract anchors remain shared and any required cross-batch evidence gap blocks
+approval. A current source and its previous version remain together. Every packet
 is bound to the full redacted scope digest and its own exact content digest; the
 controller verifies complete current/previous source coverage before invoking any
 reviewer. Every batch must pass. Missing cross-file evidence must be reported as

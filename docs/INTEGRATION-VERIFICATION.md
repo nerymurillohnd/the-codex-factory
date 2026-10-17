@@ -11,7 +11,7 @@ Evidence date: 2026-10-17 UTC. The owner requested staging all pending Codex Fac
 
 ## Current local evidence
 
-Ruff passes; its owned Python format check reports 75 unchanged files. Basedpyright through nvm Node reports 0 errors, 0 warnings and 0 notes. The complete suite with explicit native Codex 0.162.1 passed **265 tests**. Marketplace validation and deterministic project consistency pass for all three packages. LSP is unavailable: Missing executable: mcpls; no runtime was installed.
+Ruff passes; its owned Python format check reports 75 unchanged files. Basedpyright through nvm Node reports 0 errors, 0 warnings and 0 notes. The complete suite with explicit native Codex 0.162.1 passed **267 tests**. Marketplace validation and deterministic project consistency pass for all three packages. LSP is unavailable: Missing executable: mcpls; no runtime was installed.
 
 The source branches separately passed 170 and 234 tests before signed commits. The first combined packaging check reproduced 11 failures with a one-branch-only packager; the merged implementation passes all original tests unchanged. Independent read-only review verified both API forms and all six reproducibility builds. Its duplicate README catalog-link finding was reproduced and fixed without changing the audit rule.
 
@@ -38,7 +38,13 @@ must pass. Oversized single-file evidence blocks explicitly; it is not truncated
 Synthetic tests cover complete current/previous coverage, private no-read behavior,
 oversized evidence rejection and a nonpassing packet preventing aggregate approval.
 The full-source preview fits in three packets. This is controller/transport evidence;
-actual outgoing-object model review is performed again by each push.
+actual outgoing-object model review is performed again by each push. A subsequent
+review blocked the native-runtime correction when the README/test packet lacked
+its implementation from another packet. Changed sources and previous versions
+now form additional shared anchors when their complete evidence fits the same
+limit and still leaves room for every other whole-file unit. Positive sharing and
+insufficient-room fallback regressions were reproduced before correction. Larger changes retain the
+explicit missing-cross-file-evidence blocking rule.
 
 ## Current package evidence
 

@@ -448,3 +448,41 @@ def test_one_nonpassing_batch_prevents_aggregate_pass(tmp_path, reviewer, status
     verdict = review_all(batches, reviewer, tmp_path, "fixture")
     assert verdict["status"] == status
     assert len(verdict["batches"]) == 2
+
+
+def test_changed_implementation_and_previous_version_are_shared_when_bounded(tmp_path):
+    from tools.push_audit import review_batches
+
+    names = ["plugins/sample/first.py", "plugins/sample/second.py", "tools/changed.py"]
+    for name in names:
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "# existing plugin implementation\n" * 9000
+            if name != names[-1]
+            else "# changed runtime\n"
+        )
+    previous = {names[-1]: {"text": "# previous runtime\n"}}
+    batches = review_batches(
+        tmp_path,
+        dict.fromkeys(names, "hash"),
+        [names[-1]],
+        {"status": "PASS"},
+        previous_sources=previous,
+    )
+    assert len(batches) > 1
+    assert all(names[-1] in batch["sources"] for batch in batches)
+    assert all(batch["previous_sources"][names[-1]] == previous[names[-1]] for batch in batches)
+
+
+def test_shared_changes_fall_back_when_an_unchanged_whole_file_needs_space(tmp_path):
+    from tools.push_audit import MAX_EVIDENCE, review_batches
+
+    names = ["plugins/sample/changed.py", "plugins/sample/unchanged.py"]
+    for name, size in zip(names, [320000, 242000], strict=True):
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("# x\n" * (size // 4))
+    batches = review_batches(tmp_path, dict.fromkeys(names, "hash"), [names[0]], {"status": "PASS"})
+    assert {n for b in batches for n in b["sources"]} == set(names)
+    assert all(len(json.dumps(b, sort_keys=True).encode()) <= MAX_EVIDENCE for b in batches)

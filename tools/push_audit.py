@@ -264,7 +264,6 @@ def review_batches(*args, **kwargs) -> list[dict]:
         }
         or "/schemas/" in name
     }
-    names = sorted((set(sources) | set(previous)) - anchors)
     context = dict(
         full["context"],
         full_scope_digest=full["scope_digest"],
@@ -287,6 +286,17 @@ def review_batches(*args, **kwargs) -> list[dict]:
         encoded = json.dumps(value, sort_keys=True).encode()
         value["scope_digest"] = hashlib.sha256(encoded).hexdigest()
         return value, len(json.dumps(value, sort_keys=True).encode())
+
+    # Keep the outgoing change coherent across packets whenever its complete
+    # current/prior evidence fits alongside the shared contracts.
+    contract_anchors = anchors.copy()
+    anchors |= set(full["changed_files"]) & (set(sources) | set(previous))
+    remaining = (set(sources) | set(previous)) - anchors
+    if packet([])[1] > MAX_EVIDENCE or any(
+        packet([name])[1] > MAX_EVIDENCE for name in sorted(remaining)
+    ):
+        anchors = contract_anchors
+    names = sorted((set(sources) | set(previous)) - anchors)
 
     batches, owned = [], []
     for name in names:
