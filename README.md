@@ -2,7 +2,9 @@
 
 A public-by-design marketplace of independently versioned Codex plugins, maintained by Nery Samuel Murillo with Codex as a co-maintainer.
 
-**Current state:** local implementation and release-candidate verification. The GitHub repository and release have not been published. Installation commands below become public installation instructions after owner approval and publication.
+**Current state:** source repository initialized on GitHub; plugins remain release candidates. No plugin release tags or release assets have been published. Tagged installation commands below become usable after owner-approved plugin releases.
+
+See [repository publication state](docs/REPOSITORY-STATE.md) for the distinction between source publication and earlier dated verification snapshots.
 
 ## Plugins
 
