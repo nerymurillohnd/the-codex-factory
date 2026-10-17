@@ -8,9 +8,12 @@ A public-by-design marketplace of independently versioned Codex plugins, maintai
 
 | Plugin | Version | Purpose |
 | --- | --- | --- |
+| [Project Records](plugins/project-records/README.md) | 0.1.0 candidate | Project-local ADRs and technical debt ledgers with verified resolutions and preserved history |
 | [Agent Context Audit](plugins/agent-context-audit/README.md) | 0.1.0 candidate | Parallel and cross-domain audits of the instructions, memory, rules, agents, workflows and configuration governing coding agents |
 
 ## Installation
+
+Project Records has a separate [local verification report](docs/PROJECT-RECORDS-VERIFICATION.md) and [plugin usage guide](plugins/project-records/README.md).
 
 After publication:
 
@@ -33,6 +36,7 @@ node .venv/lib/python3.14/site-packages/basedpyright/index.js
 uv run --locked --no-env-file pytest tests --native-codex "$(command -v codex)"
 uv run --locked --no-env-file python -m tools.validate_marketplace
 uv run --locked --no-env-file python -m tools.package_plugin --output-dir dist
+uv run --locked --no-env-file python -m tools.package_plugin --plugin project-records --output-dir dist/project-records
 ```
 
 The Basedpyright JavaScript entry point deliberately uses the nvm Node executable. Do not run its Python wrapper, which selects its bundled Node dependency. Source/configuration/instruction Markdown is not formatter-owned.
