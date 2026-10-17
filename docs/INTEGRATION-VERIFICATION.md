@@ -11,7 +11,7 @@ Evidence date: 2026-10-17 UTC. The owner requested staging all pending Codex Fac
 
 ## Current local evidence
 
-Ruff passes; its owned Python format check reports 75 unchanged files. Basedpyright through nvm Node reports 0 errors, 0 warnings and 0 notes. The complete suite with explicit native Codex 0.162.1 passed **257 tests**. Marketplace validation and deterministic project consistency pass for all three packages. LSP is unavailable: Missing executable: mcpls; no runtime was installed.
+Ruff passes; its owned Python format check reports 75 unchanged files. Basedpyright through nvm Node reports 0 errors, 0 warnings and 0 notes. The complete suite with explicit native Codex 0.162.1 passed **265 tests**. Marketplace validation and deterministic project consistency pass for all three packages. LSP is unavailable: Missing executable: mcpls; no runtime was installed.
 
 The source branches separately passed 170 and 234 tests before signed commits. The first combined packaging check reproduced 11 failures with a one-branch-only packager; the merged implementation passes all original tests unchanged. Independent read-only review verified both API forms and all six reproducibility builds. Its duplicate README catalog-link finding was reproduced and fixed without changing the audit rule.
 
@@ -22,6 +22,23 @@ The first authenticated SSH push was blocked by the actual native reviewer befor
 Two positive contract tests failed before the correction, while seven negative/legacy tests passed. The schema now admits only the two declared arrays of strings. Existing required fields and additionalProperties=false remain intact; run-v1.json is unchanged. All nine regressions pass, and an independent reviewer checked correspondence with pipeline.py and adjudication.py. These regressions validate persisted contract objects; they do not claim a new complete live-model adjudication run.
 
 The repository-local guard was reinstalled from reviewed integrated source with all 11 resource hashes checked. The previous installation and reports were preserved in the common Git history directory. No global Git/Codex configuration changed and no hook bypass was used. Fresh outgoing-object review is still required on each push.
+
+## Changed-source coverage and bounded review
+
+A later real pre-push review correctly blocked the CI-only update because the
+controller supplied previous workflow/report text while omitting their current
+versions. Three new regression cases reproduced the missing current evidence;
+private paths are excluded before reads. Public changed source files now enter the
+exact digest-bound review scope, including workflows, maintainer tools and reports.
+
+A complete tracked-source preview then reproduced the existing 512 KiB limit.
+Whole-file batching preserves that limit, shared manifest/documentation/schema
+anchors and current/previous pairs. All sources must be covered and every packet
+must pass. Oversized single-file evidence blocks explicitly; it is not truncated.
+Synthetic tests cover complete current/previous coverage, private no-read behavior,
+oversized evidence rejection and a nonpassing packet preventing aggregate approval.
+The full-source preview fits in three packets. This is controller/transport evidence;
+actual outgoing-object model review is performed again by each push.
 
 ## Current package evidence
 

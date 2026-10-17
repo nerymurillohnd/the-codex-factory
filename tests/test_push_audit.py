@@ -316,6 +316,38 @@ def test_documentation_only_review_includes_current_implementation(signed_repo):
     assert "plugins/session-handoff/hooks/session-bootstrap.sh" in evidence["sources"]
 
 
+@pytest.mark.parametrize(
+    "name",
+    [".github/workflows/validate.yml", "docs/INTEGRATION-VERIFICATION.md", "tools/helper.py"],
+)
+def test_changed_maintainer_text_is_required_current_evidence(tmp_path, name):
+    path = tmp_path / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("# Current synthetic maintainer source\n")
+    evidence = review_evidence(tmp_path, {name: "fixture-hash"}, [name], {"status": "PASS"})
+    assert name in evidence["required_files"]
+    assert evidence["sources"][name]["text"] == path.read_text()
+
+
+def test_changed_private_json_is_not_read_as_source(tmp_path, monkeypatch):
+    private = tmp_path / "docs/auth.json"
+    private.parent.mkdir()
+    private.write_text('{"token":"synthetic-private-canary"}')
+    original = Path.read_text
+
+    def protected_read(path, *args, **kwargs):
+        if path == private:
+            raise AssertionError("Private evidence must be excluded before reading")
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", protected_read)
+    evidence = review_evidence(
+        tmp_path, {"docs/auth.json": "fixture-hash"}, ["docs/auth.json"], {"status": "PASS"}
+    )
+    assert not evidence["sources"]
+    assert not evidence["required_files"]
+
+
 @pytest.mark.parametrize("stream", ["NOT JSON", '{"type":"turn.started"}'])
 def test_invalid_or_incomplete_native_stream_is_error(signed_repo, reviewer, tmp_path, stream):
     repo, oid = signed_repo
@@ -351,3 +383,68 @@ def test_command_timeout_terminates_owned_child(tmp_path):
     pid = int(pid_file.read_text())
     with pytest.raises(ProcessLookupError):
         os.kill(pid, 0)
+
+
+def test_large_review_covers_whole_current_and_previous_sources(tmp_path):
+    from tools.push_audit import MAX_EVIDENCE, review_batches
+
+    names = ["README.md", "tools/first.py", "tools/second.py", "tools/deleted.py"]
+    files = {}
+    for name in names[:3]:
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("Identity anchor" if name == "README.md" else "# source\n" * 22000)
+        files[name] = name
+    previous = {
+        names[1]: {"text": "# previous\n" * 16000},
+        names[3]: {"text": "# deleted\n" * 16000},
+    }
+    batches = review_batches(tmp_path, files, names, {"status": "PASS"}, previous_sources=previous)
+    assert len(batches) > 1
+    assert {n for b in batches for n in b["sources"]} == set(files)
+    assert {n for b in batches for n in b["previous_sources"]} == set(previous)
+    assert all("README.md" in b["sources"] for b in batches)
+    assert all(
+        len(
+            json.dumps({k: v for k, v in b.items() if k != "scope_digest"}, sort_keys=True).encode()
+        )
+        <= MAX_EVIDENCE
+        for b in batches
+    )
+    for name in names[1:3]:
+        owned = [b for b in batches if name in b["sources"]]
+        assert len(owned) == 1
+        assert owned[0]["sources"][name]["text"] == (tmp_path / name).read_text()
+        if name in previous:
+            assert owned[0]["previous_sources"][name] == previous[name]
+    assert len({b["context"]["full_scope_digest"] for b in batches}) == 1
+
+
+def test_single_source_that_cannot_fit_is_rejected(tmp_path):
+    from tools.push_audit import MAX_EVIDENCE, review_batches
+
+    path = tmp_path / "large.py"
+    path.write_text("# x\n" * MAX_EVIDENCE)
+    with pytest.raises(ValueError, match="cannot fit"):
+        review_batches(tmp_path, {"large.py": "hash"}, ["large.py"], {"status": "PASS"})
+
+
+@pytest.mark.parametrize("status", ["BLOCKED", "ERROR"])
+def test_one_nonpassing_batch_prevents_aggregate_pass(tmp_path, reviewer, status):
+    from tools.push_audit import review_all, review_batches
+
+    names = ["first.py", "second.py"]
+    for name in names:
+        (tmp_path / name).write_text("# text\n" * 45000)
+    batches = review_batches(tmp_path, dict.fromkeys(names, "hash"), names, {"status": "PASS"})
+    assert len(batches) == 2
+    reviewer.write_text(
+        reviewer.read_text().replace(
+            "p.write_text(json.dumps(out))",
+            f"if 'second.py' in data['required_files']: out['status']={status!r}\n"
+            "p.write_text(json.dumps(out))",
+        )
+    )
+    verdict = review_all(batches, reviewer, tmp_path, "fixture")
+    assert verdict["status"] == status
+    assert len(verdict["batches"]) == 2

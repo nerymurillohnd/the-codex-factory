@@ -165,7 +165,7 @@ def redactor():
     return module.redact
 
 
-def review_evidence(
+def collect_evidence(
     root: Path,
     files: dict[str, str],
     changed: list[str],
@@ -178,6 +178,8 @@ def review_evidence(
     sources = {}
     for name in files:
         path = Path(name)
+        if private_path(path) or any(part in IGNORED for part in path.parts):
+            continue
         metadata = (
             path.name
             in {
@@ -198,7 +200,16 @@ def review_evidence(
                 and path.suffix in {".py", ".sh", ".json", ".toml", ".md", ".yml", ".yaml"}
             )
         )
-        if not metadata:
+        changed_text = name in changed and path.suffix in {
+            ".py",
+            ".sh",
+            ".json",
+            ".toml",
+            ".md",
+            ".yml",
+            ".yaml",
+        }
+        if not metadata and not changed_text:
             continue
         text = (root / path).read_text(encoding="utf-8")
         sanitized, lines = redact(text, path.suffix)
@@ -213,10 +224,114 @@ def review_evidence(
         "previous_sources": previous_sources or {},
     }
     encoded = json.dumps(value, sort_keys=True).encode()
-    if len(encoded) > MAX_EVIDENCE:
-        raise ValueError("Contextual evidence exceeds limit; review is incomplete")
+    if len(encoded) > MAX_TREE:
+        raise ValueError("Contextual evidence exceeds total audit limit")
     value["scope_digest"] = hashlib.sha256(encoded).hexdigest()
     return value
+
+
+def review_evidence(*args, **kwargs) -> dict:
+    """Compatibility entry point for a single bounded review packet."""
+    value = collect_evidence(*args, **kwargs)
+    if (
+        len(
+            json.dumps(
+                {k: v for k, v in value.items() if k != "scope_digest"}, sort_keys=True
+            ).encode()
+        )
+        > MAX_EVIDENCE
+    ):
+        raise ValueError("Contextual evidence exceeds limit; review is incomplete")
+    return value
+
+
+def review_batches(*args, **kwargs) -> list[dict]:
+    """Keep full files and prior counterparts together, with shared contract anchors."""
+    full = collect_evidence(*args, **kwargs)
+    sources, previous = full["sources"], full["previous_sources"]
+    anchors = {
+        name
+        for name in sources
+        if Path(name).name
+        in {
+            "README.md",
+            "LICENSE",
+            "CHANGELOG.md",
+            "SKILL.md",
+            "openai.yaml",
+            "plugin.json",
+            "marketplace.json",
+        }
+        or "/schemas/" in name
+    }
+    names = sorted((set(sources) | set(previous)) - anchors)
+    context = dict(
+        full["context"],
+        full_scope_digest=full["scope_digest"],
+        review_mode=(
+            "bounded whole-file batches; shared identity, documentation and schema "
+            "anchors; request missing cross-file evidence rather than infer it"
+        ),
+    )
+
+    def packet(owned):
+        selected = anchors | set(owned)
+        value = {
+            **full,
+            "sources": {n: sources[n] for n in sorted(selected & set(sources))},
+            "previous_sources": {n: previous[n] for n in sorted(selected & set(previous))},
+            "required_files": sorted(selected & set(sources)),
+            "context": context,
+        }
+        value.pop("scope_digest")
+        encoded = json.dumps(value, sort_keys=True).encode()
+        value["scope_digest"] = hashlib.sha256(encoded).hexdigest()
+        return value, len(json.dumps(value, sort_keys=True).encode())
+
+    batches, owned = [], []
+    for name in names:
+        candidate, size = packet([*owned, name])
+        if size > MAX_EVIDENCE:
+            if not owned:
+                raise ValueError(f"Whole source and shared anchors cannot fit review limit: {name}")
+            batches.append(packet(owned)[0])
+            owned = [name]
+            if packet(owned)[1] > MAX_EVIDENCE:
+                raise ValueError(f"Whole source and shared anchors cannot fit review limit: {name}")
+        else:
+            owned.append(name)
+    last, size = packet(owned)
+    if size > MAX_EVIDENCE:
+        raise ValueError("Shared anchors cannot fit review limit")
+    batches.append(last)
+    if set().union(*(set(b["sources"]) for b in batches)) != set(sources) or set().union(
+        *(set(b["previous_sources"]) for b in batches)
+    ) != set(previous):
+        raise ValueError("Review batch source coverage is incomplete")
+    return batches
+
+
+def review_all(batches: list[dict], binary: Path, directory: Path, prefix: str) -> dict:
+    """Every bounded packet must pass; retain findings and exact packet evidence."""
+    reviews = []
+    for index, evidence in enumerate(batches):
+        (directory / f"{prefix}-evidence-{index}.json").write_text(
+            json.dumps(evidence, indent=2) + "\n"
+        )
+        reviews.append(native_review(evidence, binary, directory / f"{prefix}-review-{index}.json"))
+    status = (
+        "ERROR"
+        if any(r["status"] == "ERROR" for r in reviews)
+        else "BLOCKED"
+        if any(r["status"] != "PASS" for r in reviews)
+        else "PASS"
+    )
+    return {
+        "status": status,
+        "findings": [f for r in reviews for f in r["findings"]],
+        "batches": reviews,
+        "scope_digest": batches[0]["context"]["full_scope_digest"],
+    }
 
 
 def previous_evidence(root: Path, oid: str, changed: list[str]) -> dict:
@@ -496,13 +611,11 @@ def audit_push(
                     if not zero(update.remote_oid)
                     else {}
                 )
-                evidence = review_evidence(
+                batches = review_batches(
                     snapshot_root, files, changed, deterministic, context, previous
                 )
-                (run / f"evidence-{index}.json").write_text(json.dumps(evidence, indent=2) + "\n")
-                verdict_path = run / f"review-{index}.json"
-                verdict = native_review(evidence, codex_bin, verdict_path)
-                tip["scope_digest"] = evidence["scope_digest"]
+                verdict = review_all(batches, codex_bin, run, f"tip-{index}")
+                tip["scope_digest"] = verdict["scope_digest"]
                 tip["review"] = verdict
                 report["findings"].extend(verdict["findings"])
                 if verdict["status"] != "PASS":
@@ -678,11 +791,12 @@ def main() -> None:
                     and not private_path(path.relative_to(args.root))
                 }
                 with tempfile.TemporaryDirectory(prefix="factory-working-review-") as tmp:
-                    evidence = review_evidence(args.root, files, sorted(files), report)
-                    verdict = native_review(
-                        evidence,
+                    batches = review_batches(args.root, files, sorted(files), report)
+                    verdict = review_all(
+                        batches,
                         args.codex_bin or Path(shutil.which("codex") or ""),
-                        Path(tmp) / "review.json",
+                        Path(tmp),
+                        "working",
                     )
                     report["review"] = verdict
                     report["status"] = verdict["status"]

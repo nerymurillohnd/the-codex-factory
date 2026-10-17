@@ -52,6 +52,15 @@ root README entries and actual package source/inventory/checksum reproducibility
 Deletion-only updates receive a contextual ref review without pretending a new
 content tree exists. Publication/deletion authorization remains separate.
 
+Large scopes are reviewed in bounded whole-file batches. Each batch stays below
+512 KiB and repeats shared identity, README, license, changelog, skill and schema
+anchors. A current source and its previous version remain together. Every packet
+is bound to the full redacted scope digest and its own exact content digest; the
+controller verifies complete current/previous source coverage before invoking any
+reviewer. Every batch must pass. Missing cross-file evidence must be reported as
+incomplete rather than inferred; a source that cannot fit with the shared anchors
+blocks review. Evidence is never truncated to obtain a pass.
+
 The contextual reviewer receives redacted evidence, exact scope hashes and changed
 paths. It runs with native read-only sandbox, ignored user config, and shell, apps,
 plugins, memories, multi-agent and lifecycle hooks disabled for that reviewer
