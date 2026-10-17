@@ -89,7 +89,7 @@ jobs:
           fi
           restriction_after="$(sysctl -n kernel.apparmor_restrict_unprivileged_userns)"
           test "${restriction_after}" = "${restriction_before}"
-          codex sandbox linux -- /bin/true
+          codex sandbox -- /bin/true
       - name: Behavioral fixtures and marketplace
         run: |
           codex_executable="$(command -v codex)"
