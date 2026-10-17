@@ -31,6 +31,19 @@ jobs:
           enable-cache: true
       - name: Prepare pinned Python environment
         run: uv sync --locked --python 3.14.8
+      - name: Prepare Linux native sandbox prerequisites
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes bubblewrap apparmor-profiles apparmor-utils
+          command -v bwrap
+          bwrap --version
+          if sudo aa-status --enabled; then
+            sudo install -m 0644 /usr/share/apparmor/extra-profiles/bwrap-userns-restrict /etc/apparmor.d/bwrap-userns-restrict
+            sudo apparmor_parser -r /etc/apparmor.d/bwrap-userns-restrict
+          fi
+          bwrap --unshare-user --unshare-pid --ro-bind / / --proc /proc --dev /dev -- /bin/true
       - name: Python lint and formatter-owned source
         run: |
           uv run --locked --no-env-file ruff check .
