@@ -3,17 +3,34 @@
 import asyncio
 import json
 import shutil
+import tomllib
 
 import pytest
 from agent_context_audit.isolation import inspect_claude_version, prepare_runtime, probe_isolation
 from agent_context_audit.models import ReviewRequest, RunOptions
+from agent_context_audit.privacy import redact
 from agent_context_audit.report import create_run
 from agent_context_audit.runtime import run_review_job
 
 from tests.test_contracts import empty_result
 
 
-def test_native_sandbox_and_exact_worker_transport(context_tree, tmp_path, native_codex):
+def test_native_sandbox_and_exact_worker_transport(
+    context_tree, tmp_path, native_codex, monkeypatch
+):
+    import agent_context_audit.isolation as isolation
+
+    diagnostics = []
+    original_process = isolation.run_process
+
+    async def capture_failure(*args, **kwargs):
+        result = await original_process(*args, **kwargs)
+        if result.returncode:
+            sanitized, _ = redact(result.stderr.decode(errors="replace"), ".txt")
+            diagnostics.append({"returncode": result.returncode, "stderr": sanitized[:8192]})
+        return result
+
+    monkeypatch.setattr(isolation, "run_process", capture_failure)
     target, roots = context_tree
     options = RunOptions(
         target, roots, tmp_path / "runs", tmp_path / "auth", native_codex, job_timeout=30
@@ -84,8 +101,14 @@ def test_native_sandbox_and_exact_worker_transport(context_tree, tmp_path, nativ
 
     async def exercise():
         runtime = await prepare_runtime(options, run)
+        policy = next(c for c in runtime.config if ".filesystem=" in c).split("=", 1)[1]
+        filesystem = tomllib.loads("filesystem=" + policy)["filesystem"]
+        assert filesystem[str(native_codex.resolve())] == "read"
+        assert filesystem[":root"] == "deny"
+        assert str(native_codex.resolve().parent) not in filesystem
+        assert str(target.root.resolve()) not in filesystem
         capability = await probe_isolation(runtime)
-        assert capability.verified, capability.limitations
+        assert capability.verified, (capability.limitations, diagnostics)
         server = await asyncio.start_server(handler, "127.0.0.1", 0)
         port = server.sockets[0].getsockname()[1]
         try:

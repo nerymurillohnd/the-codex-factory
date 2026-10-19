@@ -5,10 +5,34 @@
   },
   "plugins": [
     {
+      "name": "project-records",
+      "source": {
+        "source": "local",
+        "path": "./plugins/project-records"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
       "name": "agent-context-audit",
       "source": {
         "source": "local",
         "path": "./plugins/agent-context-audit"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "session-handoff",
+      "source": {
+        "source": "local",
+        "path": "./plugins/session-handoff"
       },
       "policy": {
         "installation": "AVAILABLE",

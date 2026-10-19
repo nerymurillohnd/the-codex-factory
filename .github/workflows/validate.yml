@@ -31,6 +31,19 @@ jobs:
           enable-cache: true
       - name: Prepare pinned Python environment
         run: uv sync --locked --python 3.14.8
+      - name: Prepare Linux native sandbox prerequisites
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes bubblewrap apparmor-profiles apparmor-utils
+          command -v bwrap
+          bwrap --version
+          if sudo aa-status --enabled; then
+            sudo install -m 0644 /usr/share/apparmor/extra-profiles/bwrap-userns-restrict /etc/apparmor.d/bwrap-userns-restrict
+            sudo apparmor_parser -r /etc/apparmor.d/bwrap-userns-restrict
+          fi
+          bwrap --unshare-user --unshare-pid --ro-bind / / --proc /proc --dev /dev -- /bin/true
       - name: Python lint and formatter-owned source
         run: |
           uv run --locked --no-env-file ruff check .
@@ -38,23 +51,62 @@ jobs:
       - name: Type diagnostics using nvm Node
         shell: bash
         run: |
-          export NVM_DIR="$RUNNER_TEMP/aca-nvm"
-          git init "$NVM_DIR"
-          git -C "$NVM_DIR" fetch --depth 1 https://github.com/nvm-sh/nvm.git a885b885fef16fac4bc544188fb25e9e37ae83e8
-          git -C "$NVM_DIR" checkout --detach FETCH_HEAD
-          source "$NVM_DIR/nvm.sh"
+          export NVM_DIR="${RUNNER_TEMP}/aca-nvm"
+          git init "${NVM_DIR}"
+          git -C "${NVM_DIR}" fetch --depth 1 https://github.com/nvm-sh/nvm.git a885b885fef16fac4bc544188fb25e9e37ae83e8
+          git -C "${NVM_DIR}" checkout --detach FETCH_HEAD
+          source "${NVM_DIR}/nvm.sh"
           nvm install 26.11.1
           nvm use 26.11.1
           node .venv/lib/python3.14/site-packages/basedpyright/index.js
           npm ci --prefix tools/ci --ignore-scripts
-          echo "$(dirname "$(command -v node)")" >> "$GITHUB_PATH"
-          echo "$GITHUB_WORKSPACE/tools/ci/node_modules/.bin" >> "$GITHUB_PATH"
+          node_executable="$(command -v node)"
+          node_directory="$(dirname "${node_executable}")"
+          printf '%s\n' "${node_directory}" >> "${GITHUB_PATH}"
+          echo "${GITHUB_WORKSPACE}/tools/ci/node_modules/.bin" >> "${GITHUB_PATH}"
+      - name: Resolve pinned native Codex executable
+        shell: bash
+        run: |
+          codex_binaries=( "${GITHUB_WORKSPACE}"/tools/ci/node_modules/@openai/codex-*/vendor/*/bin/codex )
+          test "${#codex_binaries[@]}" -eq 1
+          codex_native="${codex_binaries[0]}"
+          test -x "${codex_native}"
+          "${codex_native}" --version
+          printf 'FACTORY_NATIVE_CODEX=%s\n' "${codex_native}" >> "${GITHUB_ENV}"
+      - name: Permit pinned Codex native namespace setup on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          codex_native="${FACTORY_NATIVE_CODEX}"
+          test -x "${codex_native}"
+          "${codex_native}" --version
+          restriction_before="$(sysctl -n kernel.apparmor_restrict_unprivileged_userns)"
+          if sudo aa-status --enabled; then
+            profile="${RUNNER_TEMP}/factory-codex-native.apparmor"
+            cat > "${profile}" <<PROFILE
+          abi <abi/4.0>,
+          include <tunables/global>
+          profile factory-codex-native "${codex_native}" flags=(unconfined) {
+            userns,
+            "${codex_native}" mr,
+          }
+          PROFILE
+            sudo install -m 0644 "${profile}" /etc/apparmor.d/factory-codex-native
+            sudo apparmor_parser -r /etc/apparmor.d/factory-codex-native
+          fi
+          restriction_after="$(sysctl -n kernel.apparmor_restrict_unprivileged_userns)"
+          test "${restriction_after}" = "${restriction_before}"
+          codex sandbox -- /bin/true
       - name: Behavioral fixtures and marketplace
         run: |
-          uv run --locked --no-env-file pytest tests --native-codex "$(command -v codex)"
+          codex_executable="${FACTORY_NATIVE_CODEX}"
+          uv run --locked --no-env-file pytest tests --native-codex "${codex_executable}"
           uv run --locked --no-env-file python -m tools.validate_marketplace
+          uv run --locked --no-env-file python -m tools.push_audit check --root "${GITHUB_WORKSPACE}" --deterministic
       - name: Deterministic installable package
         run: |
-          uv run --locked --no-env-file python -m tools.package_plugin --output-dir dist/first
-          uv run --locked --no-env-file python -m tools.package_plugin --output-dir dist/second
-          cmp dist/first/agent-context-audit-0.1.0.zip dist/second/agent-context-audit-0.1.0.zip
+          for plugin in agent-context-audit session-handoff project-records; do
+            uv run --locked --no-env-file python -m tools.package_plugin --plugin "${plugin}" --output-dir "dist/first/${plugin}"
+            uv run --locked --no-env-file python -m tools.package_plugin --plugin "${plugin}" --output-dir "dist/second/${plugin}"
+            cmp "dist/first/${plugin}/${plugin}-0.1.0.zip" "dist/second/${plugin}/${plugin}-0.1.0.zip"
+          done

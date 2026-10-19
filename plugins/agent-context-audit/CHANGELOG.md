@@ -2,6 +2,8 @@
 
 ## 0.1.0 — unreleased candidate
 
+- Allow the exact trusted native Codex executable to re-exec inside the deny-by-default Linux sandbox, without granting its parent directory or audited sources.
+
 - Align the canonical/native listing summary with the 30-character field limit.
 
 - Preserve hybrid observation provenance and adjudicated finding IDs in the strict persisted run contract, with malformed-field and legacy-readability regressions.
